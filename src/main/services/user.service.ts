@@ -1,6 +1,7 @@
 import { Database } from 'better-sqlite3';
 import { getDatabase } from '../database/connection';
 import { User, CreateUserDto } from '../../shared/types/user.types';
+import { CreateUserDtoSchema } from '../../shared/validation/user.validation';
 
 export class UserService {
     private db: Database;
@@ -22,20 +23,29 @@ export class UserService {
     }
 
     create(user: CreateUserDto): User {
+        // Validate input
+        const validatedUser = CreateUserDtoSchema.parse(user);
+
         const stmt = this.db.prepare(`
       INSERT INTO users (username, display_name, email, avatar_url, role)
       VALUES (@username, @display_name, @email, @avatar_url, @role)
     `);
 
         const info = stmt.run({
-            username: user.username,
-            display_name: user.display_name,
-            email: user.email || null,
-            avatar_url: user.avatar_url || null,
-            role: user.role || 'member'
+            username: validatedUser.username,
+            display_name: validatedUser.display_name,
+            email: validatedUser.email || null,
+            avatar_url: validatedUser.avatar_url || null,
+            role: validatedUser.role || 'member'
         });
 
-        return this.getById(info.lastInsertRowid as number)!;
+        const createdUser = this.getById(info.lastInsertRowid as number);
+
+        if (!createdUser) {
+            throw new Error('Failed to create user: Could not retrieve created user');
+        }
+
+        return createdUser;
     }
 
     // Mock login - just returns the user if exists, or creates a default one if it's the first run

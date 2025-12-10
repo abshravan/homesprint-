@@ -1,6 +1,7 @@
 import { Database } from 'better-sqlite3';
 import { getDatabase } from '../database/connection';
 import { Sprint, CreateSprintDto } from '../../shared/types/sprint.types';
+import { CreateSprintDtoSchema } from '../../shared/validation/sprint.validation';
 
 export class SprintService {
     private db: Database;
@@ -18,28 +19,59 @@ export class SprintService {
     }
 
     create(sprint: CreateSprintDto): Sprint {
+        // Validate input
+        const validatedSprint = CreateSprintDtoSchema.parse(sprint);
+
         const stmt = this.db.prepare(`
       INSERT INTO sprints (board_id, name, start_date, end_date, goal, status)
       VALUES (@board_id, @name, @start_date, @end_date, @goal, 'future')
     `);
 
         const info = stmt.run({
-            ...sprint,
-            start_date: sprint.start_date || null,
-            end_date: sprint.end_date || null,
-            goal: sprint.goal || null
+            ...validatedSprint,
+            start_date: validatedSprint.start_date || null,
+            end_date: validatedSprint.end_date || null,
+            goal: validatedSprint.goal || null
         });
 
-        return this.db.prepare('SELECT * FROM sprints WHERE id = ?').get(info.lastInsertRowid) as Sprint;
+        const createdSprint = this.db.prepare('SELECT * FROM sprints WHERE id = ?').get(info.lastInsertRowid) as Sprint | undefined;
+
+        if (!createdSprint) {
+            throw new Error('Failed to create sprint: Could not retrieve created sprint');
+        }
+
+        return createdSprint;
     }
 
     startSprint(id: number): Sprint {
-        this.db.prepare("UPDATE sprints SET status = 'active' WHERE id = ?").run(id);
-        return this.db.prepare('SELECT * FROM sprints WHERE id = ?').get(id) as Sprint;
+        const result = this.db.prepare("UPDATE sprints SET status = 'active' WHERE id = ?").run(id);
+
+        if (result.changes === 0) {
+            throw new Error(`Sprint with id ${id} not found`);
+        }
+
+        const updatedSprint = this.db.prepare('SELECT * FROM sprints WHERE id = ?').get(id) as Sprint | undefined;
+
+        if (!updatedSprint) {
+            throw new Error(`Failed to start sprint: Could not retrieve sprint with id ${id}`);
+        }
+
+        return updatedSprint;
     }
 
     closeSprint(id: number): Sprint {
-        this.db.prepare("UPDATE sprints SET status = 'closed' WHERE id = ?").run(id);
-        return this.db.prepare('SELECT * FROM sprints WHERE id = ?').get(id) as Sprint;
+        const result = this.db.prepare("UPDATE sprints SET status = 'closed' WHERE id = ?").run(id);
+
+        if (result.changes === 0) {
+            throw new Error(`Sprint with id ${id} not found`);
+        }
+
+        const updatedSprint = this.db.prepare('SELECT * FROM sprints WHERE id = ?').get(id) as Sprint | undefined;
+
+        if (!updatedSprint) {
+            throw new Error(`Failed to close sprint: Could not retrieve sprint with id ${id}`);
+        }
+
+        return updatedSprint;
     }
 }

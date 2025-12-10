@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import { getDatabase } from './database/connection';
+import { getDatabase, closeDatabase } from './database/connection';
 import { DatabaseMigrator } from './database/migrations/migrate';
 import { registerIpcHandlers } from './ipc/handlers';
 
@@ -16,8 +16,25 @@ const createWindow = () => {
     // Initialize Database
     try {
         const db = getDatabase();
-        const devMigrationsPath = path.join(process.cwd(), 'src/main/database/migrations');
-        const migrator = new DatabaseMigrator(db, devMigrationsPath);
+
+        // Determine migrations path based on environment
+        // In development: migrations are in src/main/database/migrations
+        // In production packaged app: migrations are in resources/migrations (extraResources)
+        // In production unpackaged: migrations are in dist-electron/main/database/migrations
+        const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+        let migrationsPath: string;
+
+        if (isDev) {
+            migrationsPath = path.join(process.cwd(), 'src/main/database/migrations');
+        } else if (app.isPackaged) {
+            // In packaged app, migrations are in resources/migrations
+            migrationsPath = path.join(process.resourcesPath, 'migrations');
+        } else {
+            // In built but unpackaged app
+            migrationsPath = path.join(__dirname, 'database/migrations');
+        }
+
+        const migrator = new DatabaseMigrator(db, migrationsPath);
         migrator.migrate();
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -67,6 +84,11 @@ app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
         createWindow();
     }
+});
+
+// Clean up database connection before app quits
+app.on('before-quit', () => {
+    closeDatabase();
 });
 
 // In this file you can include the rest of your app's specific main process
