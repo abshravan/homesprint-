@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { useCreateProject } from '../hooks/useProjects';
 import { Button } from '../components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export const CreateProjectPage = () => {
     const navigate = useNavigate();
-    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { user } = useAuth();
+    const createProject = useCreateProject();
+    const [error, setError] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         key: '',
@@ -14,13 +18,24 @@ export const CreateProjectPage = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setIsSubmitting(true);
+        setError('');
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsSubmitting(false);
+        if (!user) {
+            setError('You must be logged in to create a project');
+            return;
+        }
+
+        try {
+            await createProject.mutateAsync({
+                name: formData.name,
+                key: formData.key,
+                description: formData.description || undefined,
+                created_by: user.id,
+            });
             navigate('/projects');
-        }, 1000);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to create project');
+        }
     };
 
     const generateKey = (name: string) => {
@@ -110,14 +125,20 @@ export const CreateProjectPage = () => {
                     </p>
                 </div>
 
+                {error && (
+                    <div className="p-3 bg-destructive/10 border border-destructive rounded-md">
+                        <p className="text-sm text-destructive">{error}</p>
+                    </div>
+                )}
+
                 <div className="flex gap-3 pt-4">
                     <Button
                         type="submit"
-                        disabled={isSubmitting || !formData.name || !formData.key}
+                        disabled={createProject.isPending || !formData.name || !formData.key}
                         variant="enterprise"
                         className="flex-1"
                     >
-                        {isSubmitting ? (
+                        {createProject.isPending ? (
                             <>
                                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                 Creating...
@@ -130,7 +151,7 @@ export const CreateProjectPage = () => {
                         type="button"
                         variant="outline"
                         onClick={() => navigate('/projects')}
-                        disabled={isSubmitting}
+                        disabled={createProject.isPending}
                     >
                         Cancel
                     </Button>

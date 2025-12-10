@@ -1,29 +1,11 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useProjects } from '../hooks/useProjects';
 import { Button } from '../components/ui/button';
 import { Loader2, Plus, FolderOpen, Calendar } from 'lucide-react';
 
-// Mock project data for now - in a real app, this would come from a hook
-const useMockProjects = () => {
-    return {
-        data: [
-            {
-                id: 1,
-                name: 'HomeSprint',
-                key: 'HOME',
-                description: 'Family task management and household operations',
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-            }
-        ],
-        isLoading: false
-    };
-};
-
 export const ProjectListPage = () => {
     const navigate = useNavigate();
-    const { data: projects, isLoading } = useMockProjects();
-    const [isCreating] = useState(false);
+    const { data: projects, isLoading } = useProjects();
 
     if (isLoading) {
         return (
@@ -41,8 +23,8 @@ export const ProjectListPage = () => {
                     <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
                     <p className="text-muted-foreground">Your grand plans and abandoned dreams</p>
                 </div>
-                <Button onClick={() => navigate('/projects/create')} disabled={isCreating} variant="enterprise">
-                    {isCreating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                <Button onClick={() => navigate('/projects/create')} variant="enterprise">
+                    <Plus className="h-4 w-4 mr-2" />
                     Create Project
                 </Button>
             </div>
