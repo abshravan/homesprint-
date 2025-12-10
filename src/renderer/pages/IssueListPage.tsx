@@ -1,6 +1,7 @@
 import { useIssues } from '../hooks/useIssues';
+import { useUsers } from '../hooks/useUsers';
 import { Button } from '../components/ui/button';
-import { Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Calendar, User, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 // Mock components for now since we haven't created them yet
@@ -31,7 +32,38 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 export const IssueListPage = () => {
     const { data: issues, isLoading } = useIssues();
+    const { data: users } = useUsers();
     const navigate = useNavigate();
+
+    const getUserName = (userId?: number) => {
+        if (!userId) return 'Unassigned';
+        const user = users?.find(u => u.id === userId);
+        return user?.display_name || 'Unknown User';
+    };
+
+    const isOverdue = (dueDate?: string) => {
+        if (!dueDate) return false;
+        return new Date(dueDate) < new Date();
+    };
+
+    const formatDueDate = (dueDate?: string) => {
+        if (!dueDate) return '-';
+        const date = new Date(dueDate);
+        const today = new Date();
+        const diffTime = date.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays < 0) {
+            return `${Math.abs(diffDays)} days overdue`;
+        } else if (diffDays === 0) {
+            return 'Due today';
+        } else if (diffDays === 1) {
+            return 'Due tomorrow';
+        } else if (diffDays <= 7) {
+            return `Due in ${diffDays} days`;
+        }
+        return date.toLocaleDateString();
+    };
 
     if (isLoading) {
         return (
@@ -49,7 +81,7 @@ export const IssueListPage = () => {
                     <h1 className="text-2xl font-bold tracking-tight">All Issues</h1>
                     <p className="text-muted-foreground">Everything you promised to do but haven't.</p>
                 </div>
-                <Button variant="enterprise">Create Issue</Button>
+                <Button onClick={() => navigate('/issues/create')} variant="enterprise">Create Issue</Button>
             </div>
 
             <div className="rounded-md border bg-card">
@@ -58,9 +90,10 @@ export const IssueListPage = () => {
                         <MockTableRow>
                             <MockTableHead>Key</MockTableHead>
                             <MockTableHead>Summary</MockTableHead>
+                            <MockTableHead>Assignee</MockTableHead>
                             <MockTableHead>Status</MockTableHead>
                             <MockTableHead>Priority</MockTableHead>
-                            <MockTableHead>Procrastination Level</MockTableHead>
+                            <MockTableHead>Due Date</MockTableHead>
                             <MockTableHead>Created</MockTableHead>
                         </MockTableRow>
                     </MockTableHeader>
@@ -88,10 +121,28 @@ export const IssueListPage = () => {
                                         <span className="font-medium">{issue.summary}</span>
                                     </MockTableCell>
                                     <MockTableCell>
+                                        <div className="flex items-center gap-2">
+                                            <User className="h-3 w-3 text-muted-foreground" />
+                                            <span className="text-sm">{getUserName(issue.assignee_id)}</span>
+                                        </div>
+                                    </MockTableCell>
+                                    <MockTableCell>
                                         <StatusBadge status={issue.status} />
                                     </MockTableCell>
-                                    <MockTableCell>{issue.priority}</MockTableCell>
-                                    <MockTableCell>{issue.procrastination_level}</MockTableCell>
+                                    <MockTableCell>
+                                        <span className="capitalize">{issue.priority}</span>
+                                    </MockTableCell>
+                                    <MockTableCell>
+                                        {issue.due_date ? (
+                                            <div className={`flex items-center gap-1 ${isOverdue(issue.due_date) ? 'text-destructive font-medium' : ''}`}>
+                                                {isOverdue(issue.due_date) && <AlertCircle className="h-3 w-3" />}
+                                                <Calendar className="h-3 w-3" />
+                                                <span className="text-xs">{formatDueDate(issue.due_date)}</span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">-</span>
+                                        )}
+                                    </MockTableCell>
                                     <MockTableCell>
                                         <span className="text-xs text-muted-foreground">
                                             {new Date(issue.created_at).toLocaleDateString()}
