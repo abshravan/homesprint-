@@ -8,6 +8,8 @@ import { IssueDetailPage } from './pages/IssueDetailPage';
 import { BoardListPage } from './pages/BoardListPage';
 import { BoardDetailPage } from './pages/BoardDetailPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
+import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
+import { WallOfShameDashboard } from './pages/WallOfShameDashboard';
 import { useDashboardStats } from './hooks/useDashboard';
 import { Loader2 } from 'lucide-react';
 
@@ -84,8 +86,8 @@ function App() {
                         <Route element={<MainLayout />}>
                         {/* Dashboards */}
                         <Route path="/" element={<Dashboard />} />
-                        <Route path="/dashboard/exec" element={<PlaceholderPage />} />
-                        <Route path="/dashboard/shame" element={<PlaceholderPage />} />
+                        <Route path="/dashboard/exec" element={<ExecutiveDashboard />} />
+                        <Route path="/dashboard/shame" element={<WallOfShameDashboard />} />
 
                         {/* Projects */}
                         <Route path="/projects" element={<BoardListPage />} /> {/* Reuse BoardList for Projects */}

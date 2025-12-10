@@ -69,36 +69,49 @@ const navItems: NavItem[] = [
 ];
 
 const NavItemComponent = ({ item, depth = 0 }: { item: NavItem; depth?: number }) => {
-    const [isOpen, setIsOpen] = useState(false);
+    // Open Dashboards by default
+    const [isOpen, setIsOpen] = useState(depth === 0 && item.title === 'Dashboards');
     const location = useLocation();
     const hasChildren = item.children && item.children.length > 0;
     const isActive = item.href === location.pathname;
 
     const toggleOpen = () => setIsOpen(!isOpen);
 
+    // If it's a leaf node (no children), render as Link
+    if (!hasChildren && item.href) {
+        return (
+            <Link to={item.href} className="w-full block">
+                <div
+                    className={cn(
+                        "flex items-center px-4 py-2 text-sm font-medium cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
+                        isActive && "bg-accent text-accent-foreground",
+                        depth > 0 && "pl-8"
+                    )}
+                >
+                    {item.icon && <item.icon className="mr-2 h-4 w-4" />}
+                    <span className="truncate">{item.title}</span>
+                </div>
+            </Link>
+        );
+    }
+
+    // Parent node with children
     return (
         <div className="w-full">
             <div
                 className={cn(
                     "flex items-center px-4 py-2 text-sm font-medium cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors",
-                    isActive && "bg-accent text-accent-foreground",
                     depth > 0 && "pl-8"
                 )}
-                onClick={hasChildren ? toggleOpen : undefined}
+                onClick={toggleOpen}
             >
                 {item.icon && <item.icon className="mr-2 h-4 w-4" />}
-                {hasChildren ? (
-                    <div className="flex items-center justify-between w-full">
-                        <span className="truncate">{item.title}</span>
-                        {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
-                    </div>
-                ) : (
-                    <Link to={item.href || '#'} className="w-full truncate">
-                        {item.title}
-                    </Link>
-                )}
+                <div className="flex items-center justify-between w-full">
+                    <span className="truncate">{item.title}</span>
+                    {isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                </div>
             </div>
-            {hasChildren && isOpen && (
+            {isOpen && (
                 <div className="bg-muted/30">
                     {item.children!.map((child, index) => (
                         <NavItemComponent key={index} item={child} depth={depth + 1} />

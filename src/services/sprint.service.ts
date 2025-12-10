@@ -6,7 +6,7 @@ export class SprintService {
     private db = getDatabase();
 
     async getByBoardId(boardId: number): Promise<Sprint[]> {
-        const sprints = await this.db.getAllByIndex('sprints', 'project_id', boardId);
+        const sprints = await this.db.getAllByIndex('sprints', 'board_id', boardId);
         return sprints.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
     }
 
@@ -22,7 +22,7 @@ export class SprintService {
         const now = new Date().toISOString();
         const sprintData = {
             ...validatedSprint,
-            status: 'future',
+            status: 'future' as const,
             created_at: now,
         };
 
@@ -44,7 +44,7 @@ export class SprintService {
 
         const updatedSprint = {
             ...sprint,
-            status: 'active',
+            status: 'active' as const,
         };
 
         await this.db.update('sprints', updatedSprint);
@@ -59,7 +59,7 @@ export class SprintService {
 
         const updatedSprint = {
             ...sprint,
-            status: 'closed',
+            status: 'closed' as const,
         };
 
         await this.db.update('sprints', updatedSprint);
