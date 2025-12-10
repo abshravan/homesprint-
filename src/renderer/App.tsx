@@ -1,6 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { DatabaseInitializer } from './components/DatabaseInitializer';
+import { LoginPage } from './pages/LoginPage';
 import { MainLayout } from './components/layout/MainLayout';
 import { IssueListPage } from './pages/IssueListPage';
 import { CreateIssuePage } from './pages/CreateIssuePage';
@@ -86,48 +90,53 @@ const Dashboard = () => {
 function App() {
     return (
         <ErrorBoundary>
-            <QueryClientProvider client={queryClient}>
-                <Router>
-                    <Routes>
-                        <Route element={<MainLayout />}>
-                        {/* Dashboards */}
-                        <Route path="/" element={<Dashboard />} />
-                        <Route path="/dashboard/exec" element={<ExecutiveDashboard />} />
-                        <Route path="/dashboard/shame" element={<WallOfShameDashboard />} />
+            <AuthProvider>
+                <DatabaseInitializer>
+                    <QueryClientProvider client={queryClient}>
+                        <Router>
+                            <Routes>
+                                <Route path="/login" element={<LoginPage />} />
+                                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                                    {/* Dashboards */}
+                                    <Route path="/" element={<Dashboard />} />
+                                    <Route path="/dashboard/exec" element={<ExecutiveDashboard />} />
+                                    <Route path="/dashboard/shame" element={<WallOfShameDashboard />} />
 
-                        {/* Projects */}
-                        <Route path="/projects" element={<ProjectListPage />} />
-                        <Route path="/projects/create" element={<CreateProjectPage />} />
-                        <Route path="/projects/archived" element={<ArchivedProjectsPage />} />
+                                    {/* Projects */}
+                                    <Route path="/projects" element={<ProjectListPage />} />
+                                    <Route path="/projects/create" element={<CreateProjectPage />} />
+                                    <Route path="/projects/archived" element={<ArchivedProjectsPage />} />
 
-                        {/* Issues */}
-                        <Route path="/issues" element={<IssueListPage />} />
-                        <Route path="/issues/create" element={<CreateIssuePage />} />
-                        <Route path="/issues/my-open" element={<MyOpenIssuesPage />} />
-                        <Route path="/issues/reported" element={<ReportedIssuesPage />} />
-                        <Route path="/issues/old" element={<OldIssuesPage />} />
-                        <Route path="/issues/:id" element={<IssueDetailPage />} />
+                                    {/* Issues */}
+                                    <Route path="/issues" element={<IssueListPage />} />
+                                    <Route path="/issues/create" element={<CreateIssuePage />} />
+                                    <Route path="/issues/my-open" element={<MyOpenIssuesPage />} />
+                                    <Route path="/issues/reported" element={<ReportedIssuesPage />} />
+                                    <Route path="/issues/old" element={<OldIssuesPage />} />
+                                    <Route path="/issues/:id" element={<IssueDetailPage />} />
 
-                        {/* Operations */}
-                        <Route path="/sprints" element={<BoardListPage />} /> {/* Sprints live in Boards */}
-                        <Route path="/backlog" element={<BoardListPage />} /> {/* Backlogs live in Boards */}
-                        <Route path="/releases" element={<PlaceholderPage />} />
+                                    {/* Operations */}
+                                    <Route path="/sprints" element={<BoardListPage />} />
+                                    <Route path="/backlog" element={<BoardListPage />} />
+                                    <Route path="/releases" element={<PlaceholderPage />} />
 
-                        {/* System */}
-                        <Route path="/settings/users" element={<PlaceholderPage />} />
-                        <Route path="/settings/config" element={<PlaceholderPage />} />
-                        <Route path="/settings/excuses" element={<PlaceholderPage />} />
+                                    {/* System */}
+                                    <Route path="/settings/users" element={<PlaceholderPage />} />
+                                    <Route path="/settings/config" element={<PlaceholderPage />} />
+                                    <Route path="/settings/excuses" element={<PlaceholderPage />} />
 
-                        {/* Boards (Core) */}
-                        <Route path="/boards" element={<BoardListPage />} />
-                        <Route path="/boards/:id" element={<BoardDetailPage />} />
+                                    {/* Boards (Core) */}
+                                    <Route path="/boards" element={<BoardListPage />} />
+                                    <Route path="/boards/:id" element={<BoardDetailPage />} />
 
-                        {/* Catch-all */}
-                        <Route path="*" element={<PlaceholderPage />} />
-                    </Route>
-                </Routes>
-            </Router>
-        </QueryClientProvider>
+                                    {/* Catch-all */}
+                                    <Route path="*" element={<PlaceholderPage />} />
+                                </Route>
+                            </Routes>
+                        </Router>
+                    </QueryClientProvider>
+                </DatabaseInitializer>
+            </AuthProvider>
         </ErrorBoundary>
     );
 }
