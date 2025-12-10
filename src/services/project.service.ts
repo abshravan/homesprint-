@@ -10,6 +10,10 @@ export class ProjectService {
         return projects.sort((a, b) => a.name.localeCompare(b.name));
     }
 
+    async getById(id: number): Promise<Project | undefined> {
+        return await this.db.getById('projects', id);
+    }
+
     async create(project: CreateProjectDto): Promise<Project> {
         // Validate input
         const validatedProject = CreateProjectDtoSchema.parse(project);
@@ -29,6 +33,31 @@ export class ProjectService {
         }
 
         return createdProject;
+    }
+
+    async update(id: number, data: Partial<CreateProjectDto>): Promise<Project> {
+        const project = await this.getById(id);
+        if (!project) {
+            throw new Error(`Project with id ${id} not found`);
+        }
+
+        const updatedProject = {
+            ...project,
+            ...data,
+            updated_at: new Date().toISOString(),
+        };
+
+        await this.db.update('projects', updatedProject);
+        return updatedProject;
+    }
+
+    async delete(id: number): Promise<void> {
+        const project = await this.getById(id);
+        if (!project) {
+            throw new Error(`Project with id ${id} not found`);
+        }
+
+        await this.db.delete('projects', id);
     }
 }
 
