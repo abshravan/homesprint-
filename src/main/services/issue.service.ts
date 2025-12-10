@@ -1,6 +1,7 @@
 import { Database } from 'better-sqlite3';
 import { getDatabase } from '../database/connection';
 import { Issue, CreateIssueDto, IssueType } from '../../shared/types/issue.types';
+import { CreateIssueDtoSchema, UpdateIssueStatusSchema } from '../../shared/validation/issue.validation';
 
 export class IssueService {
     private db: Database;
@@ -18,14 +19,21 @@ export class IssueService {
     }
 
     create(issue: CreateIssueDto): Issue {
+        // Validate input
+        const validatedIssue = CreateIssueDtoSchema.parse(issue);
+
         // Generate Issue Key (e.g., PROJ-1)
-        const projectKey = this.db.prepare('SELECT key FROM projects WHERE id = ?').get(issue.project_id) as { key: string };
-        const count = this.db.prepare('SELECT COUNT(*) as count FROM issues WHERE project_id = ?').get(issue.project_id) as { count: number };
+        const projectKey = this.db.prepare('SELECT key FROM projects WHERE id = ?').get(validatedIssue.project_id) as { key: string } | undefined;
+        if (!projectKey) {
+            throw new Error(`Project with id ${validatedIssue.project_id} not found`);
+        }
+
+        const count = this.db.prepare('SELECT COUNT(*) as count FROM issues WHERE project_id = ?').get(validatedIssue.project_id) as { count: number };
         const issueKey = `${projectKey.key}-${count.count + 1}`;
 
         const stmt = this.db.prepare(`
       INSERT INTO issues (
-        issue_key, project_id, issue_type_id, summary, description, 
+        issue_key, project_id, issue_type_id, summary, description,
         priority, assignee_id, reporter_id, due_date, story_points,
         procrastination_level, spouse_approval_required
       )
@@ -37,23 +45,41 @@ export class IssueService {
     `);
 
         const info = stmt.run({
-            ...issue,
+            ...validatedIssue,
             issue_key: issueKey,
-            description: issue.description || null,
-            priority: issue.priority || 'medium',
-            assignee_id: issue.assignee_id || null,
-            due_date: issue.due_date || null,
-            story_points: issue.story_points || null,
-            procrastination_level: issue.procrastination_level || 'low',
-            spouse_approval_required: issue.spouse_approval_required ? 1 : 0
+            description: validatedIssue.description || null,
+            priority: validatedIssue.priority || 'medium',
+            assignee_id: validatedIssue.assignee_id || null,
+            due_date: validatedIssue.due_date || null,
+            story_points: validatedIssue.story_points || null,
+            procrastination_level: validatedIssue.procrastination_level || 'low',
+            spouse_approval_required: validatedIssue.spouse_approval_required ? 1 : 0
         });
 
-        return this.getById(info.lastInsertRowid as number)!;
+        const createdIssue = this.getById(info.lastInsertRowid as number);
+        if (!createdIssue) {
+            throw new Error('Failed to create issue: Could not retrieve created issue');
+        }
+
+        return createdIssue;
     }
 
     updateStatus(id: number, status: string): Issue {
-        this.db.prepare('UPDATE issues SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(status, id);
-        return this.getById(id)!;
+        // Validate input
+        const validated = UpdateIssueStatusSchema.parse({ id, status });
+
+        const result = this.db.prepare('UPDATE issues SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(validated.status, validated.id);
+
+        if (result.changes === 0) {
+            throw new Error(`Issue with id ${id} not found`);
+        }
+
+        const updatedIssue = this.getById(id);
+        if (!updatedIssue) {
+            throw new Error(`Failed to update issue: Could not retrieve issue with id ${id}`);
+        }
+
+        return updatedIssue;
     }
 
     getIssueTypes(): IssueType[] {

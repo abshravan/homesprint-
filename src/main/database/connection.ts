@@ -20,6 +20,7 @@ export function getDatabase(): Database.Database {
     try {
         db = new Database(dbPath);
         db.pragma('journal_mode = WAL');
+        db.pragma('foreign_keys = ON');
     } catch (error) {
         throw new Error(`Failed to open database at ${dbPath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

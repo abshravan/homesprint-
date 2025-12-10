@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { MainLayout } from './components/layout/MainLayout';
 import { IssueListPage } from './pages/IssueListPage';
 import { CreateIssuePage } from './pages/CreateIssuePage';
@@ -76,10 +77,11 @@ const Dashboard = () => {
 
 function App() {
     return (
-        <QueryClientProvider client={queryClient}>
-            <Router>
-                <Routes>
-                    <Route element={<MainLayout />}>
+        <ErrorBoundary>
+            <QueryClientProvider client={queryClient}>
+                <Router>
+                    <Routes>
+                        <Route element={<MainLayout />}>
                         {/* Dashboards */}
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/dashboard/exec" element={<PlaceholderPage />} />
@@ -118,6 +120,7 @@ function App() {
                 </Routes>
             </Router>
         </QueryClientProvider>
+        </ErrorBoundary>
     );
 }
 
