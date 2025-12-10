@@ -4,7 +4,7 @@
 
 ## Overview
 
-HomeSprint is a Jira parody application built with Electron, React, and SQLite. It brings all the "joy" of enterprise project management tools to your home life, complete with sprint planning, burndown charts, and passive-aggressive comment tracking.
+HomeSprint is a Jira parody web application built with React, TypeScript, and IndexedDB. It brings all the "joy" of enterprise project management tools to your home life, complete with sprint planning, burndown charts, and passive-aggressive comment tracking.
 
 ## Features
 
@@ -14,28 +14,31 @@ HomeSprint is a Jira parody application built with Electron, React, and SQLite. 
 - **Dashboard**: Real-time stats on your unproductivity
 - **Comments**: Leave passive-aggressive notes for your household members
 - **Parody Fields**: Track procrastination levels, spouse approval requirements, and more
+- **Offline-First**: All data stored locally in your browser with IndexedDB
 
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript
 - **UI Components**: shadcn/ui (Radix UI) + Tailwind CSS
-- **Desktop Framework**: Electron
-- **Database**: SQLite with better-sqlite3
+- **Database**: IndexedDB (browser storage)
 - **State Management**: TanStack Query + Zustand
 - **Charts**: Recharts
 - **Drag & Drop**: @dnd-kit
+- **Build Tool**: Vite
+- **Validation**: Zod
 
 ## Prerequisites
 
 - Node.js 20+
 - npm 10+
+- Modern web browser with IndexedDB support
 
 ## Installation
 
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd HomeSprint
+cd homesprint-
 ```
 
 2. Install dependencies:
@@ -48,105 +51,158 @@ npm install
 npm run dev
 ```
 
-This will:
-- Start Vite dev server on port 5173
-- Compile TypeScript for Electron main process
-- Launch the Electron application
+This will start the Vite dev server on `http://localhost:5173`
 
 ## Project Structure
 
 ```
-HomeSprint/
+homesprint-/
 ├── src/
-│   ├── main/                    # Electron main process
-│   │   ├── database/           # SQLite database & migrations
-│   │   ├── ipc/                # IPC handlers
-│   │   ├── services/           # Business logic layer
-│   │   └── index.ts            # Main process entry
-│   ├── renderer/               # React frontend
-│   │   ├── components/         # UI components
-│   │   │   ├── boards/        # Board components (Kanban, Scrum)
-│   │   │   ├── layout/        # Layout components
-│   │   │   └── ui/            # Reusable UI components
-│   │   ├── hooks/             # React Query hooks
-│   │   ├── pages/             # Page components
-│   │   └── App.tsx            # React app entry
-│   └── shared/                 # Shared types & constants
-│       ├── constants/          # IPC channels
-│       └── types/              # TypeScript interfaces
-├── dist/                       # Vite build output
-└── dist-electron/             # Electron build output
+│   ├── lib/                    # Core libraries
+│   │   └── database.ts        # IndexedDB wrapper
+│   ├── services/              # Business logic layer
+│   │   ├── issue.service.ts
+│   │   ├── project.service.ts
+│   │   ├── user.service.ts
+│   │   ├── comment.service.ts
+│   │   ├── board.service.ts
+│   │   └── sprint.service.ts
+│   ├── renderer/              # React frontend
+│   │   ├── components/        # UI components
+│   │   │   ├── boards/       # Board components (Kanban, Scrum)
+│   │   │   ├── layout/       # Layout components
+│   │   │   └── ui/           # Reusable UI components
+│   │   ├── hooks/            # React Query hooks
+│   │   ├── pages/            # Page components
+│   │   └── App.tsx           # React app entry
+│   └── shared/                # Shared types & validation
+│       ├── types/             # TypeScript interfaces
+│       └── validation/        # Zod validation schemas
+├── dist/                      # Production build output
+└── index.html                 # Entry HTML file
 ```
 
 ## Database
 
-The application uses SQLite with a local database stored in your user data directory:
-- **Linux**: `~/.config/HomeSprint/honeydoo.db`
-- **macOS**: `~/Library/Application Support/HomeSprint/honeydoo.db`
-- **Windows**: `%APPDATA%/HomeSprint/honeydoo.db`
+The application uses IndexedDB for browser-based storage. All data is stored locally in your browser and persists across sessions.
 
-Migrations are automatically applied on startup.
+### IndexedDB Stores
+
+- `users` - User accounts
+- `projects` - Projects with unique keys
+- `issue_types` - Epic, Story, Task, Bug, Chore, Argument, Mystery
+- `issues` - Tasks with full tracking
+- `sprints` - Sprint planning data
+- `boards` - Kanban and Scrum boards
+- `comments` - Issue comments and discussions
+
+Data is automatically initialized with seed data on first launch.
 
 ## Available Scripts
 
-- `npm run dev` - Start development mode
+- `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run lint` - Run ESLint
-- `npm run preview` - Preview production build
+- `npm run preview` - Preview production build locally
 
 ## Development
 
 ### Adding New Features
 
 1. Define types in `src/shared/types/`
-2. Create database migrations in `src/main/database/migrations/`
-3. Add service methods in `src/main/services/`
-4. Register IPC handlers in `src/main/ipc/handlers.ts`
-5. Update preload API in `src/main/preload.ts`
-6. Create React hooks in `src/renderer/hooks/`
-7. Build UI components in `src/renderer/components/`
+2. Create validation schemas in `src/shared/validation/`
+3. Update IndexedDB schema in `src/lib/database.ts`
+4. Add service methods in `src/services/`
+5. Create React hooks in `src/renderer/hooks/`
+6. Build UI components in `src/renderer/components/`
 
-### Database Migrations
+### Data Validation
 
-Create a new migration file:
-```sql
--- src/main/database/migrations/002_your_feature.sql
-ALTER TABLE issues ADD COLUMN new_field TEXT;
+All data mutations are validated using Zod schemas before being stored in IndexedDB:
+
+```typescript
+// Example from issue.service.ts
+const validatedIssue = CreateIssueDtoSchema.parse(issue);
 ```
 
-Migrations are automatically applied in order by version number.
+This ensures type safety and data integrity at runtime.
+
+## Deployment
+
+Build the production bundle:
+
+```bash
+npm run build
+```
+
+The `dist/` folder contains the static files ready for deployment to any web server or hosting platform:
+
+- Netlify
+- Vercel
+- GitHub Pages
+- Any static file host
+
+## Browser Support
+
+Requires a modern browser with support for:
+- IndexedDB
+- ES2020
+- React 18
+- CSS Grid & Flexbox
+
+Tested on:
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
+
+## Data Persistence
+
+All data is stored in your browser's IndexedDB. Data persists across sessions but is tied to your browser and domain. To backup or transfer data:
+
+1. Use browser developer tools to export IndexedDB
+2. Or implement export/import features (future enhancement)
+
+**Note**: Clearing browser data will delete all HomeSprint data.
 
 ## Known Issues
 
 The following features from the spec are not yet implemented:
-- Custom issue types (Argument, Mystery, Tech Debt)
+- Data export/import functionality
+- Custom issue type creation (predefined types work)
 - Extended status workflows (Procrastinating, YouTube Tutorial, etc.)
-- Advanced parody fields
+- Advanced parody field functionality
 - Automation rules
 - Notification system
 - Achievement badges & gamification
 - Advanced reporting (velocity charts, cumulative flow)
 
-See the full issue checklist for details.
+See `ISSUES.md` for the full issue list.
 
 ## Architecture Notes
 
-- **Local-first**: All data stored locally in SQLite
-- **IPC Communication**: Renderer ↔ Main process via typed IPC channels
-- **Type Safety**: Full TypeScript coverage across main and renderer
+- **Offline-First**: Works without internet connection
+- **Local Storage**: All data in IndexedDB (browser database)
+- **Type Safety**: Full TypeScript coverage with runtime validation
 - **Query Caching**: TanStack Query for efficient data fetching
-- **Security**: Context isolation enabled, no nodeIntegration
+- **Error Boundaries**: Graceful error handling in React
+- **Validation**: Zod schemas for all data mutations
 
 ## Troubleshooting
 
-### Electron GL Surface Errors
-If you see GL surface errors on Linux, hardware acceleration is automatically disabled in the app.
+### IndexedDB Not Available
+If IndexedDB is not supported or disabled in your browser, the app will not function. Enable IndexedDB in browser settings.
 
-### Database Errors
-If the database fails to initialize, the app will quit. Check that the user data directory is writable.
+### Data Not Persisting
+Check that you're not in private/incognito mode, which may prevent IndexedDB persistence.
 
 ### Port 5173 Already in Use
-Kill the existing Vite process or change the port in `package.json` dev scripts.
+Kill the existing Vite process or change the port in `vite.config.ts`:
+```typescript
+server: {
+    port: 3000, // your preferred port
+}
+```
 
 ## Contributing
 
