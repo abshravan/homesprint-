@@ -5,16 +5,19 @@ const DB_NAME = 'homesprint';
 const DB_VERSION = 1;
 
 interface DBSchema {
-    users: { id?: number; username: string; display_name: string; email?: string; avatar_url?: string; role: string; created_at: string; updated_at: string };
+    users: { id?: number; username: string; display_name: string; email?: string; avatar_url?: string; role: 'admin' | 'member' | 'guest'; created_at: string; updated_at: string };
     projects: { id?: number; name: string; key: string; description?: string; created_by: number; created_at: string; updated_at: string };
     issue_types: { id?: number; name: string; icon?: string; color?: string; description?: string };
     issues: { id?: number; issue_key: string; project_id: number; issue_type_id: number; summary: string; description?: string; status: string; priority: string; assignee_id?: number; reporter_id: number; created_at: string; updated_at: string; due_date?: string; resolved_at?: string; story_points?: number; epic_link?: number; sprint_id?: number; original_estimate?: number; remaining_estimate?: number; time_spent?: number; procrastination_level?: string; excuse_category?: string; netflix_episodes?: number; likelihood_completion?: number; spouse_approval_required?: boolean; energy_level_required?: string; budget_impact?: string };
-    sprints: { id?: number; project_id: number; name: string; goal?: string; start_date?: string; end_date?: string; status: string; created_at: string };
-    boards: { id?: number; project_id: number; name: string; type: string; columns?: string; filter_query?: string; created_at: string };
+    sprints: { id?: number; board_id: number; name: string; goal?: string; start_date?: string; end_date?: string; status: 'active' | 'future' | 'closed'; created_at: string };
+    boards: { id?: number; project_id: number; name: string; type: 'scrum' | 'kanban'; columns?: string; filter_query?: string; created_at: string };
     comments: { id?: number; issue_id: number; author_id: number; content: string; parent_comment_id?: number; created_at: string; updated_at: string; is_edited: boolean; is_passive_aggressive?: boolean };
 }
 
 type StoreName = keyof DBSchema;
+
+// Helper type for stored entities (id is required after storage)
+type Stored<T> = T & { id: number };
 
 class Database {
     private db: IDBDatabase | null = null;
@@ -63,7 +66,7 @@ class Database {
 
                 if (!db.objectStoreNames.contains('sprints')) {
                     const sprintsStore = db.createObjectStore('sprints', { keyPath: 'id', autoIncrement: true });
-                    sprintsStore.createIndex('project_id', 'project_id');
+                    sprintsStore.createIndex('board_id', 'board_id');
                 }
 
                 if (!db.objectStoreNames.contains('boards')) {
@@ -114,40 +117,40 @@ class Database {
         return transaction.objectStore(storeName);
     }
 
-    async getAll<T extends StoreName>(storeName: T): Promise<DBSchema[T][]> {
+    async getAll<T extends StoreName>(storeName: T): Promise<Stored<DBSchema[T]>[]> {
         const store = await this.getStore(storeName);
         return new Promise((resolve, reject) => {
             const request = store.getAll();
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => resolve(request.result as Stored<DBSchema[T]>[]);
             request.onerror = () => reject(request.error);
         });
     }
 
-    async getById<T extends StoreName>(storeName: T, id: number): Promise<DBSchema[T] | undefined> {
+    async getById<T extends StoreName>(storeName: T, id: number): Promise<Stored<DBSchema[T]> | undefined> {
         const store = await this.getStore(storeName);
         return new Promise((resolve, reject) => {
             const request = store.get(id);
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => resolve(request.result ? (request.result as Stored<DBSchema[T]>) : undefined);
             request.onerror = () => reject(request.error);
         });
     }
 
-    async getByIndex<T extends StoreName>(storeName: T, indexName: string, value: any): Promise<DBSchema[T] | undefined> {
+    async getByIndex<T extends StoreName>(storeName: T, indexName: string, value: any): Promise<Stored<DBSchema[T]> | undefined> {
         const store = await this.getStore(storeName);
         const index = store.index(indexName);
         return new Promise((resolve, reject) => {
             const request = index.get(value);
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => resolve(request.result ? (request.result as Stored<DBSchema[T]>) : undefined);
             request.onerror = () => reject(request.error);
         });
     }
 
-    async getAllByIndex<T extends StoreName>(storeName: T, indexName: string, value: any): Promise<DBSchema[T][]> {
+    async getAllByIndex<T extends StoreName>(storeName: T, indexName: string, value: any): Promise<Stored<DBSchema[T]>[]> {
         const store = await this.getStore(storeName);
         const index = store.index(indexName);
         return new Promise((resolve, reject) => {
             const request = index.getAll(value);
-            request.onsuccess = () => resolve(request.result);
+            request.onsuccess = () => resolve(request.result as Stored<DBSchema[T]>[]);
             request.onerror = () => reject(request.error);
         });
     }
@@ -161,7 +164,7 @@ class Database {
         });
     }
 
-    async update<T extends StoreName>(storeName: T, data: DBSchema[T]): Promise<void> {
+    async update<T extends StoreName>(storeName: T, data: Stored<DBSchema[T]>): Promise<void> {
         const store = await this.getStore(storeName, 'readwrite');
         return new Promise((resolve, reject) => {
             const request = store.put(data);
@@ -193,6 +196,14 @@ class Database {
             request.onerror = () => reject(request.error);
         });
     }
+
+    close(): void {
+        if (this.db) {
+            this.db.close();
+            this.db = null;
+            this.initPromise = null;
+        }
+    }
 }
 
 // Singleton instance
@@ -206,8 +217,8 @@ export function getDatabase(): Database {
 }
 
 export function closeDatabase(): void {
-    if (dbInstance?.db) {
-        dbInstance.db.close();
+    if (dbInstance) {
+        dbInstance.close();
         dbInstance = null;
     }
 }
