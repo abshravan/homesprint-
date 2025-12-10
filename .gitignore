@@ -4,7 +4,6 @@ package-lock.json
 
 # Build outputs
 dist/
-dist-electron/
 out/
 build/
 
@@ -51,13 +50,3 @@ Desktop.ini
 *.tmp
 .cache/
 .temp/
-
-# Electron specific
-*.sqlite
-*.sqlite-journal
-*.sqlite-shm
-*.sqlite-wal
-
-# Application specific
-app-data/
-user-data/

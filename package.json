@@ -3,7 +3,6 @@
   "productName": "HomeSprint",
   "version": "1.0.0",
   "description": "A satirical project management system for household tasks",
-  "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
