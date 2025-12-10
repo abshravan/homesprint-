@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
 import {
     LayoutDashboard,
     CheckSquare,
@@ -9,6 +10,8 @@ import {
     Coffee,
     ChevronRight,
     ChevronDown,
+    LogOut,
+    User,
 } from 'lucide-react';
 
 interface NavItem {
@@ -123,6 +126,14 @@ const NavItemComponent = ({ item, depth = 0 }: { item: NavItem; depth?: number }
 };
 
 export const Sidebar = () => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
     return (
         <div className="w-64 border-r bg-card h-screen flex flex-col">
             <div className="p-4 border-b flex items-center space-x-2">
@@ -138,8 +149,26 @@ export const Sidebar = () => {
                     ))}
                 </nav>
             </div>
-            <div className="p-4 border-t text-xs text-muted-foreground text-center">
-                v1.0.0 (Enterprise Edition)
+            <div className="border-t">
+                <div className="p-3 flex items-center space-x-2 text-sm">
+                    <div className="h-8 w-8 bg-muted rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{user?.display_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user?.role}</p>
+                    </div>
+                </div>
+                <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-sm text-left hover:bg-accent hover:text-accent-foreground transition-colors flex items-center space-x-2"
+                >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                </button>
+                <div className="p-2 text-xs text-muted-foreground text-center">
+                    v1.0.0 (Enterprise Edition)
+                </div>
             </div>
         </div>
     );
