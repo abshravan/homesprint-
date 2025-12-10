@@ -1,0 +1,94 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm Cream Background */
+    --background: 40 33% 98%;
+    /* Dark Warm Brown Text */
+    --foreground: 20 14% 15%;
+
+    /* White/Cream Card */
+    --card: 0 0% 100%;
+    --card-foreground: 20 14% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 14% 15%;
+
+    /* Warm Rust/Terracotta Primary */
+    --primary: 12 76% 61%;
+    --primary-foreground: 40 33% 98%;
+
+    /* Sage Green Secondary */
+    --secondary: 120 20% 90%;
+    --secondary-foreground: 120 30% 25%;
+
+    /* Beige/Sand Muted */
+    --muted: 30 20% 94%;
+    --muted-foreground: 25 10% 45%;
+
+    /* Sage Accent */
+    --accent: 120 20% 90%;
+    --accent-foreground: 120 30% 25%;
+
+    /* Soft Red Destructive */
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 40 33% 98%;
+
+    /* Warm Grey Border */
+    --border: 30 10% 85%;
+    --input: 30 10% 85%;
+    --ring: 12 76% 61%;
+
+    --radius: 0.75rem;
+    /* Rounder corners for friendlier feel */
+  }
+
+  .dark {
+    /* Dark Warm Grey/Brown Background */
+    --background: 25 15% 12%;
+    /* Soft Cream Text */
+    --foreground: 40 20% 94%;
+
+    /* Darker Warm Grey Card */
+    --card: 25 15% 15%;
+    --card-foreground: 40 20% 94%;
+
+    --popover: 25 15% 15%;
+    --popover-foreground: 40 20% 94%;
+
+    /* Muted Rust Primary */
+    --primary: 12 60% 65%;
+    --primary-foreground: 40 20% 94%;
+
+    /* Dark Sage Secondary */
+    --secondary: 120 15% 25%;
+    --secondary-foreground: 40 20% 94%;
+
+    /* Dark Muted */
+    --muted: 25 15% 20%;
+    --muted-foreground: 30 10% 65%;
+
+    /* Dark Accent */
+    --accent: 120 15% 25%;
+    --accent-foreground: 40 20% 94%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 40 20% 94%;
+
+    --border: 25 15% 25%;
+    --input: 25 15% 25%;
+    --ring: 12 60% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
