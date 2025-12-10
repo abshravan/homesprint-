@@ -10,6 +10,12 @@ import { BoardDetailPage } from './pages/BoardDetailPage';
 import { PlaceholderPage } from './pages/PlaceholderPage';
 import { ExecutiveDashboard } from './pages/ExecutiveDashboard';
 import { WallOfShameDashboard } from './pages/WallOfShameDashboard';
+import { MyOpenIssuesPage } from './pages/MyOpenIssuesPage';
+import { ReportedIssuesPage } from './pages/ReportedIssuesPage';
+import { OldIssuesPage } from './pages/OldIssuesPage';
+import { ProjectListPage } from './pages/ProjectListPage';
+import { CreateProjectPage } from './pages/CreateProjectPage';
+import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage';
 import { useDashboardStats } from './hooks/useDashboard';
 import { Loader2 } from 'lucide-react';
 
@@ -90,16 +96,16 @@ function App() {
                         <Route path="/dashboard/shame" element={<WallOfShameDashboard />} />
 
                         {/* Projects */}
-                        <Route path="/projects" element={<BoardListPage />} /> {/* Reuse BoardList for Projects */}
-                        <Route path="/projects/create" element={<BoardListPage />} /> {/* Just go to list for now */}
-                        <Route path="/projects/archived" element={<PlaceholderPage />} />
+                        <Route path="/projects" element={<ProjectListPage />} />
+                        <Route path="/projects/create" element={<CreateProjectPage />} />
+                        <Route path="/projects/archived" element={<ArchivedProjectsPage />} />
 
                         {/* Issues */}
                         <Route path="/issues" element={<IssueListPage />} />
                         <Route path="/issues/create" element={<CreateIssuePage />} />
-                        <Route path="/issues/my-open" element={<IssueListPage />} /> {/* Reuse IssueList */}
-                        <Route path="/issues/reported" element={<IssueListPage />} /> {/* Reuse IssueList */}
-                        <Route path="/issues/old" element={<IssueListPage />} /> {/* Reuse IssueList */}
+                        <Route path="/issues/my-open" element={<MyOpenIssuesPage />} />
+                        <Route path="/issues/reported" element={<ReportedIssuesPage />} />
+                        <Route path="/issues/old" element={<OldIssuesPage />} />
                         <Route path="/issues/:id" element={<IssueDetailPage />} />
 
                         {/* Operations */}
