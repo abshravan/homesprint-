@@ -40,6 +40,31 @@ export class UserService {
         return createdUser;
     }
 
+    async update(id: number, data: Partial<CreateUserDto>): Promise<User> {
+        const user = await this.getById(id);
+        if (!user) {
+            throw new Error(`User with id ${id} not found`);
+        }
+
+        const updatedUser = {
+            ...user,
+            ...data,
+            updated_at: new Date().toISOString(),
+        };
+
+        await this.db.update('users', updatedUser);
+        return updatedUser;
+    }
+
+    async delete(id: number): Promise<void> {
+        const user = await this.getById(id);
+        if (!user) {
+            throw new Error(`User with id ${id} not found`);
+        }
+
+        await this.db.delete('users', id);
+    }
+
     // Mock login - just returns the user if exists, or creates a default one if it's the first run
     async login(username: string): Promise<User> {
         const user = await this.getByUsername(username);
