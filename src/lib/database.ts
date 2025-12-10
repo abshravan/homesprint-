@@ -104,6 +104,17 @@ class Database {
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 });
+
+                // Seed default project
+                const projectsStore = transaction.objectStore('projects');
+                projectsStore.add({
+                    name: 'HomeSprint',
+                    key: 'HOME',
+                    description: 'Family task management and household operations',
+                    created_by: 1,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                });
             };
         });
 
