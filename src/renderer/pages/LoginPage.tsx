@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -101,15 +101,16 @@ export const LoginPage = () => {
                             'Sign In'
                         )}
                     </Button>
-                </form>
 
-                <div className="bg-muted/50 rounded-lg p-4 text-sm text-center">
-                    <p className="font-medium mb-1">Default Credentials</p>
-                    <p className="text-muted-foreground">
-                        Username: <code className="bg-background px-2 py-1 rounded">admin</code><br />
-                        Password: <code className="bg-background px-2 py-1 rounded">admin</code>
-                    </p>
-                </div>
+                    <div className="text-center pt-4">
+                        <p className="text-sm text-muted-foreground">
+                            Don't have an account?{' '}
+                            <Link to="/signup" className="text-primary hover:underline font-medium">
+                                Sign up
+                            </Link>
+                        </p>
+                    </div>
+                </form>
             </div>
         </div>
     );

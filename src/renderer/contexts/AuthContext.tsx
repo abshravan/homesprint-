@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getUserService } from '../../services/user.service';
 
 interface User {
     id: number;
@@ -19,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const userService = getUserService();
 
     useEffect(() => {
         // Check if user is already logged in
@@ -34,19 +36,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const login = async (username: string, password: string): Promise<boolean> => {
-        // Simple auth - in production, this would call an API
-        if (username === 'admin' && password === 'admin') {
-            const adminUser: User = {
-                id: 1,
-                username: 'admin',
-                display_name: 'Administrator',
-                role: 'admin',
+        try {
+            // Get user from database
+            const dbUser = await userService.getByUsername(username);
+
+            if (!dbUser) {
+                return false;
+            }
+
+            // Check password (stored in localStorage for this demo)
+            const credentials = JSON.parse(localStorage.getItem('homesprint_credentials') || '{}');
+            if (credentials[username] !== password) {
+                return false;
+            }
+
+            // Set user session
+            const userSession: User = {
+                id: dbUser.id!,
+                username: dbUser.username,
+                display_name: dbUser.display_name,
+                role: dbUser.role,
             };
-            setUser(adminUser);
-            localStorage.setItem('homesprint_user', JSON.stringify(adminUser));
+
+            setUser(userSession);
+            localStorage.setItem('homesprint_user', JSON.stringify(userSession));
             return true;
+        } catch (error) {
+            console.error('Login failed:', error);
+            return false;
         }
-        return false;
     };
 
     const logout = () => {
