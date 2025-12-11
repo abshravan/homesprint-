@@ -8,6 +8,7 @@ export const CreateIssueDtoSchema = z.object({
     issue_type_id: z.number().int().positive('Issue type ID must be a positive integer'),
     summary: z.string().min(1, 'Summary is required').max(500, 'Summary must be less than 500 characters'),
     description: z.string().max(10000, 'Description must be less than 10000 characters').optional(),
+    status: z.string().min(1).max(50).optional(),
     priority: z.enum(VALID_PRIORITIES).optional(),
     assignee_id: z.number().int().positive('Assignee ID must be a positive integer').optional(),
     reporter_id: z.number().int().positive('Reporter ID must be a positive integer'),

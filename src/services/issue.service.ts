@@ -31,7 +31,7 @@ export class IssueService {
         const issueData = {
             ...validatedIssue,
             issue_key: issueKey,
-            status: 'todo',
+            status: validatedIssue.status || 'todo',
             priority: validatedIssue.priority || 'medium',
             procrastination_level: validatedIssue.procrastination_level || 'low',
             spouse_approval_required: validatedIssue.spouse_approval_required || false,

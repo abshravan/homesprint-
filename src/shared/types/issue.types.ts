@@ -35,6 +35,7 @@ export interface CreateIssueDto {
     issue_type_id: number;
     summary: string;
     description?: string;
+    status?: string;
     priority?: string;
     assignee_id?: number;
     reporter_id: number;
