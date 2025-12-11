@@ -1,10 +1,13 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DatabaseInitializer } from './components/DatabaseInitializer';
 import { LoginPage } from './pages/LoginPage';
+import { SignupPage } from './pages/SignupPage';
+import { SetupPage } from './pages/SetupPage';
 import { MainLayout } from './components/layout/MainLayout';
 import { IssueListPage } from './pages/IssueListPage';
 import { CreateIssuePage } from './pages/CreateIssuePage';
@@ -22,9 +25,56 @@ import { CreateProjectPage } from './pages/CreateProjectPage';
 import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { useDashboardStats } from './hooks/useDashboard';
+import { getUserService } from '../services/user.service';
 import { Loader2 } from 'lucide-react';
 
 const queryClient = new QueryClient();
+
+const FirstRunCheck = ({ children }: { children: React.ReactNode }) => {
+    const [isChecking, setIsChecking] = useState(true);
+    const [needsSetup, setNeedsSetup] = useState(false);
+    const userService = getUserService();
+
+    useEffect(() => {
+        const checkFirstRun = async () => {
+            try {
+                // Check if setup is complete
+                const setupComplete = localStorage.getItem('homesprint_setup_complete');
+                if (setupComplete === 'true') {
+                    setNeedsSetup(false);
+                } else {
+                    // Check if any users exist
+                    const users = await userService.getAll();
+                    setNeedsSetup(users.length === 0);
+                }
+            } catch (error) {
+                console.error('Error checking first run:', error);
+                setNeedsSetup(false);
+            } finally {
+                setIsChecking(false);
+            }
+        };
+
+        checkFirstRun();
+    }, []);
+
+    if (isChecking) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+                    <p className="text-muted-foreground">Initializing...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (needsSetup) {
+        return <Navigate to="/setup" replace />;
+    }
+
+    return <>{children}</>;
+};
 
 const Dashboard = () => {
     const { data: stats, isLoading, error } = useDashboardStats();
@@ -96,8 +146,10 @@ function App() {
                     <QueryClientProvider client={queryClient}>
                         <Router>
                             <Routes>
-                                <Route path="/login" element={<LoginPage />} />
-                                <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                                <Route path="/setup" element={<SetupPage />} />
+                                <Route path="/login" element={<FirstRunCheck><LoginPage /></FirstRunCheck>} />
+                                <Route path="/signup" element={<FirstRunCheck><SignupPage /></FirstRunCheck>} />
+                                <Route element={<FirstRunCheck><ProtectedRoute><MainLayout /></ProtectedRoute></FirstRunCheck>}>
                                     {/* Dashboards */}
                                     <Route path="/" element={<Dashboard />} />
                                     <Route path="/dashboard/exec" element={<ExecutiveDashboard />} />
