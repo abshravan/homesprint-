@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateIssue } from '../hooks/useIssues';
+import { useUsers } from '../hooks/useUsers';
 import { Button } from '../components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 export const CreateIssuePage = () => {
     const navigate = useNavigate();
     const createIssue = useCreateIssue();
+    const { data: users } = useUsers();
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -19,6 +21,8 @@ export const CreateIssuePage = () => {
         procrastination_level: 'low',
         spouse_approval_required: false,
         story_points: 1,
+        assignee_id: undefined as number | undefined,
+        due_date: '',
     });
 
     const validateForm = () => {
@@ -51,10 +55,18 @@ export const CreateIssuePage = () => {
         await new Promise(resolve => setTimeout(resolve, 1500));
 
         try {
-            await createIssue.mutateAsync({
+            // Prepare data, only include due_date if it's set
+            const issueData: any = {
                 ...formData,
                 reporter_id: 1, // Default user
-            });
+            };
+
+            // Only include due_date if it's not empty
+            if (formData.due_date) {
+                issueData.due_date = formData.due_date;
+            }
+
+            await createIssue.mutateAsync(issueData);
             navigate('/issues');
         } catch (error) {
             setErrors({ submit: 'Failed to create issue. Please try again.' });
@@ -149,6 +161,40 @@ export const CreateIssuePage = () => {
                             <option value="high">High (Next month)</option>
                             <option value="extreme">Extreme (Next year)</option>
                         </select>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Assignee</label>
+                        <select
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={formData.assignee_id || ''}
+                            onChange={e => setFormData({ ...formData, assignee_id: e.target.value ? Number(e.target.value) : undefined })}
+                        >
+                            <option value="">Unassigned (Safe choice)</option>
+                            {users?.map(user => (
+                                <option key={user.id} value={user.id}>
+                                    {user.display_name}
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-muted-foreground">
+                            Assign to someone who will blame later
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium leading-none">Due Date</label>
+                        <input
+                            type="date"
+                            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={formData.due_date}
+                            onChange={e => setFormData({ ...formData, due_date: e.target.value })}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            Pick a date you'll definitely miss
+                        </p>
                     </div>
                 </div>
 

@@ -20,6 +20,7 @@ import { OldIssuesPage } from './pages/OldIssuesPage';
 import { ProjectListPage } from './pages/ProjectListPage';
 import { CreateProjectPage } from './pages/CreateProjectPage';
 import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage';
+import { UserManagementPage } from './pages/UserManagementPage';
 import { useDashboardStats } from './hooks/useDashboard';
 import { Loader2 } from 'lucide-react';
 
@@ -121,7 +122,7 @@ function App() {
                                     <Route path="/releases" element={<PlaceholderPage />} />
 
                                     {/* System */}
-                                    <Route path="/settings/users" element={<PlaceholderPage />} />
+                                    <Route path="/settings/users" element={<UserManagementPage />} />
                                     <Route path="/settings/config" element={<PlaceholderPage />} />
                                     <Route path="/settings/excuses" element={<PlaceholderPage />} />
 

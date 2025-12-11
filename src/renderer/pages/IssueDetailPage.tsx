@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useIssues, useUpdateIssueStatus } from '../hooks/useIssues';
+import { useUsers } from '../hooks/useUsers';
 import { Button } from '../components/ui/button';
 import { TransitionDialog } from '../components/ui/TransitionDialog';
 import { CommentsSection } from '../components/ui/CommentsSection';
@@ -12,12 +13,14 @@ import {
     Share2,
     MoreHorizontal,
     AlertTriangle,
+    Calendar,
 } from 'lucide-react';
 
 export const IssueDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { data: issues, isLoading } = useIssues();
+    const { data: users } = useUsers();
     const updateStatus = useUpdateIssueStatus();
 
     const [isTransitionOpen, setIsTransitionOpen] = useState(false);
@@ -40,6 +43,13 @@ export const IssueDetailPage = () => {
 
     // In a real app we'd fetch by ID, but for now we filter the list
     const issue = issues?.find(i => i.id === Number(id));
+
+    // Get assignee and reporter user info
+    const assignee = issue?.assignee_id ? users?.find(u => u.id === issue.assignee_id) : null;
+    const reporter = issue?.reporter_id ? users?.find(u => u.id === issue.reporter_id) : null;
+
+    // Check if issue is overdue
+    const isOverdue = issue?.due_date && issue.status !== 'done' && new Date(issue.due_date) < new Date();
 
     const handleStatusClick = (status: string) => {
         if (status === issue?.status) return;
@@ -186,14 +196,14 @@ export const IssueDetailPage = () => {
                             <div className="grid grid-cols-2 gap-y-3 text-sm">
                                 <div className="text-muted-foreground">Assignee</div>
                                 <div className="flex items-center space-x-2">
-                                    <div className="h-5 w-5 rounded-full bg-blue-500"></div>
-                                    <span>Unassigned</span>
+                                    <div className={`h-5 w-5 rounded-full ${assignee ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                                    <span>{assignee?.display_name || 'Unassigned'}</span>
                                 </div>
 
                                 <div className="text-muted-foreground">Reporter</div>
                                 <div className="flex items-center space-x-2">
                                     <div className="h-5 w-5 rounded-full bg-green-500"></div>
-                                    <span>You</span>
+                                    <span>{reporter?.display_name || 'Unknown'}</span>
                                 </div>
 
                                 <div className="text-muted-foreground">Priority</div>
@@ -201,6 +211,23 @@ export const IssueDetailPage = () => {
 
                                 <div className="text-muted-foreground">Story Points</div>
                                 <div>{issue.story_points || '-'}</div>
+
+                                <div className="text-muted-foreground">Due Date</div>
+                                <div className="flex items-center space-x-1">
+                                    {issue.due_date ? (
+                                        <>
+                                            <Calendar className="h-3 w-3" />
+                                            <span className={isOverdue ? 'text-red-500 font-semibold' : ''}>
+                                                {new Date(issue.due_date).toLocaleDateString()}
+                                            </span>
+                                            {isOverdue && (
+                                                <AlertTriangle className="h-3 w-3 text-red-500 ml-1" />
+                                            )}
+                                        </>
+                                    ) : (
+                                        <span className="text-muted-foreground">No deadline (lucky you)</span>
+                                    )}
+                                </div>
                             </div>
                         </div>
 
@@ -235,6 +262,13 @@ export const IssueDetailPage = () => {
 
                                 <div className="text-muted-foreground">Updated</div>
                                 <div>{new Date(issue.updated_at).toLocaleDateString()}</div>
+
+                                {issue.resolved_at && (
+                                    <>
+                                        <div className="text-muted-foreground">Resolved</div>
+                                        <div className="text-green-600">{new Date(issue.resolved_at).toLocaleDateString()}</div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
