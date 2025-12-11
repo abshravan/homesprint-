@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useIssues, useUpdateIssueStatus, useUpdateIssue, useDeleteIssue } from '../hooks/useIssues';
 import { useUsers } from '../hooks/useUsers';
+import { useIssueHistory } from '../hooks/useHistory';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { TransitionDialog } from '../components/ui/TransitionDialog';
 import { CommentsSection } from '../components/ui/CommentsSection';
 import { ExcuseGenerator } from '../components/ui/ExcuseGenerator';
 import { SpouseApprovalModal } from '../components/ui/SpouseApprovalModal';
+import { IssueHistoryTimeline } from '../components/IssueHistoryTimeline';
 import {
     Loader2,
     ArrowLeft,
@@ -37,6 +39,9 @@ export const IssueDetailPage = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [activeTab, setActiveTab] = useState<'comments' | 'history' | 'worklog'>('comments');
+
+    const { data: history, isLoading: isLoadingHistory } = useIssueHistory(id ? Number(id) : undefined);
 
     const handleTransition = (status: string) => {
         if (status === 'done' && issue?.spouse_approval_required) {
@@ -310,12 +315,49 @@ export const IssueDetailPage = () => {
                         <div className="space-y-4 pt-6">
                             <h3 className="text-sm font-semibold text-muted-foreground">Activity</h3>
                             <div className="flex items-center space-x-4 border-b pb-2">
-                                <Button variant="ghost" size="sm" className="font-bold border-b-2 border-primary rounded-none">Comments</Button>
-                                <Button variant="ghost" size="sm">History</Button>
-                                <Button variant="ghost" size="sm">Work Log</Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={activeTab === 'comments' ? "font-bold border-b-2 border-primary rounded-none" : ""}
+                                    onClick={() => setActiveTab('comments')}
+                                >
+                                    Comments
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={activeTab === 'history' ? "font-bold border-b-2 border-primary rounded-none" : ""}
+                                    onClick={() => setActiveTab('history')}
+                                >
+                                    History
+                                </Button>
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={activeTab === 'worklog' ? "font-bold border-b-2 border-primary rounded-none" : ""}
+                                    onClick={() => setActiveTab('worklog')}
+                                >
+                                    Work Log
+                                </Button>
                             </div>
 
-                            <CommentsSection issueId={issue.id} />
+                            {activeTab === 'comments' && <CommentsSection issueId={issue.id} />}
+                            {activeTab === 'history' && (
+                                <div className="py-4">
+                                    {isLoadingHistory ? (
+                                        <div className="flex items-center justify-center py-8">
+                                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                        </div>
+                                    ) : (
+                                        <IssueHistoryTimeline history={history || []} />
+                                    )}
+                                </div>
+                            )}
+                            {activeTab === 'worklog' && (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    <p className="text-sm">Work log feature coming soon...</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

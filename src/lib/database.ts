@@ -2,7 +2,7 @@
 // This replaces the SQLite database used in the Electron version
 
 const DB_NAME = 'homesprint';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 interface DBSchema {
     users: { id?: number; username: string; display_name: string; email?: string; avatar_url?: string; role: 'admin' | 'member' | 'guest'; created_at: string; updated_at: string };
@@ -12,6 +12,7 @@ interface DBSchema {
     sprints: { id?: number; board_id: number; name: string; goal?: string; start_date?: string; end_date?: string; status: 'active' | 'future' | 'closed'; created_at: string };
     boards: { id?: number; project_id: number; name: string; type: 'scrum' | 'kanban'; columns?: string; filter_query?: string; created_at: string };
     comments: { id?: number; issue_id: number; author_id: number; content: string; parent_comment_id?: number; created_at: string; updated_at: string; is_edited: boolean; is_passive_aggressive?: boolean };
+    issue_history: { id?: number; issue_id: number; user_id: number; field_name: string; old_value?: string; new_value?: string; change_type: 'created' | 'updated' | 'deleted'; created_at: string };
 }
 
 type StoreName = keyof DBSchema;
@@ -77,6 +78,13 @@ class Database {
                 if (!db.objectStoreNames.contains('comments')) {
                     const commentsStore = db.createObjectStore('comments', { keyPath: 'id', autoIncrement: true });
                     commentsStore.createIndex('issue_id', 'issue_id');
+                }
+
+                if (!db.objectStoreNames.contains('issue_history')) {
+                    const historyStore = db.createObjectStore('issue_history', { keyPath: 'id', autoIncrement: true });
+                    historyStore.createIndex('issue_id', 'issue_id');
+                    historyStore.createIndex('user_id', 'user_id');
+                    historyStore.createIndex('created_at', 'created_at');
                 }
 
                 // Seed initial data

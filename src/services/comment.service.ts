@@ -45,6 +45,38 @@ export class CommentService {
 
         return createdComment;
     }
+
+    async update(id: number, content: string): Promise<Comment> {
+        const comment = await this.db.getById('comments', id);
+        if (!comment) {
+            throw new Error(`Comment with id ${id} not found`);
+        }
+
+        const updatedComment = {
+            ...comment,
+            content,
+            updated_at: new Date().toISOString(),
+            is_edited: true,
+        };
+
+        await this.db.update('comments', updatedComment);
+        const result = await this.db.getById('comments', id);
+
+        if (!result) {
+            throw new Error('Failed to update comment');
+        }
+
+        return result;
+    }
+
+    async delete(id: number): Promise<void> {
+        const comment = await this.db.getById('comments', id);
+        if (!comment) {
+            throw new Error(`Comment with id ${id} not found`);
+        }
+
+        await this.db.delete('comments', id);
+    }
 }
 
 // Singleton instance
