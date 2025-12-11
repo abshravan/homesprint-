@@ -63,10 +63,45 @@ export class IssueService {
             ...issue,
             status: validated.status,
             updated_at: new Date().toISOString(),
+            resolved_at: validated.status === 'done' ? new Date().toISOString() : issue.resolved_at,
         };
 
         await this.db.update('issues', updatedIssue);
         return updatedIssue;
+    }
+
+    async update(id: number, updates: Partial<Issue>): Promise<Issue> {
+        const issue = await this.getById(id);
+        if (!issue) {
+            throw new Error(`Issue with id ${id} not found`);
+        }
+
+        const updatedIssue = {
+            ...issue,
+            ...updates,
+            id: issue.id, // Ensure ID doesn't change
+            issue_key: issue.issue_key, // Ensure issue key doesn't change
+            created_at: issue.created_at, // Preserve creation date
+            updated_at: new Date().toISOString(),
+        };
+
+        await this.db.update('issues', updatedIssue);
+        const result = await this.getById(id);
+
+        if (!result) {
+            throw new Error('Failed to update issue: Could not retrieve updated issue');
+        }
+
+        return result;
+    }
+
+    async delete(id: number): Promise<void> {
+        const issue = await this.getById(id);
+        if (!issue) {
+            throw new Error(`Issue with id ${id} not found`);
+        }
+
+        await this.db.delete('issues', id);
     }
 
     async getIssueTypes(): Promise<IssueType[]> {
