@@ -1,9 +1,11 @@
 import { getDatabase } from '../lib/database';
 import { Issue, CreateIssueDto, IssueType } from '../shared/types/issue.types';
 import { CreateIssueDtoSchema, UpdateIssueStatusSchema } from '../shared/validation/issue.validation';
+import { getHistoryService } from './history.service';
 
 export class IssueService {
     private db = getDatabase();
+    private historyService = getHistoryService();
 
     async getAll(): Promise<Issue[]> {
         const issues = await this.db.getAll('issues');
@@ -14,7 +16,7 @@ export class IssueService {
         return await this.db.getById('issues', id);
     }
 
-    async create(issue: CreateIssueDto): Promise<Issue> {
+    async create(issue: CreateIssueDto, userId: number = 1): Promise<Issue> {
         // Validate input
         const validatedIssue = CreateIssueDtoSchema.parse(issue);
 
@@ -47,10 +49,19 @@ export class IssueService {
             throw new Error('Failed to create issue: Could not retrieve created issue');
         }
 
+        // Track creation in history
+        await this.historyService.create({
+            issue_id: id,
+            user_id: userId,
+            field_name: 'issue',
+            new_value: issueKey,
+            change_type: 'created',
+        });
+
         return createdIssue;
     }
 
-    async updateStatus(id: number, status: string): Promise<Issue> {
+    async updateStatus(id: number, status: string, userId: number = 1): Promise<Issue> {
         // Validate input
         const validated = UpdateIssueStatusSchema.parse({ id, status });
 
@@ -59,6 +70,7 @@ export class IssueService {
             throw new Error(`Issue with id ${validated.id} not found`);
         }
 
+        const oldStatus = issue.status;
         const updatedIssue = {
             ...issue,
             status: validated.status,
@@ -67,10 +79,23 @@ export class IssueService {
         };
 
         await this.db.update('issues', updatedIssue);
+
+        // Track status change in history
+        if (oldStatus !== validated.status) {
+            await this.historyService.create({
+                issue_id: id,
+                user_id: userId,
+                field_name: 'status',
+                old_value: oldStatus,
+                new_value: validated.status,
+                change_type: 'updated',
+            });
+        }
+
         return updatedIssue;
     }
 
-    async update(id: number, updates: Partial<Issue>): Promise<Issue> {
+    async update(id: number, updates: Partial<Issue>, userId: number = 1): Promise<Issue> {
         const issue = await this.getById(id);
         if (!issue) {
             throw new Error(`Issue with id ${id} not found`);
@@ -86,6 +111,31 @@ export class IssueService {
         };
 
         await this.db.update('issues', updatedIssue);
+
+        // Track changes in history
+        const historyEntries = [];
+        const trackableFields: (keyof Issue)[] = [
+            'summary', 'description', 'priority', 'assignee_id', 'status',
+            'due_date', 'story_points', 'procrastination_level', 'spouse_approval_required'
+        ];
+
+        for (const field of trackableFields) {
+            if (updates[field] !== undefined && issue[field] !== updates[field]) {
+                historyEntries.push({
+                    issue_id: id,
+                    user_id: userId,
+                    field_name: field,
+                    old_value: issue[field]?.toString() || '',
+                    new_value: updates[field]?.toString() || '',
+                    change_type: 'updated' as const,
+                });
+            }
+        }
+
+        if (historyEntries.length > 0) {
+            await this.historyService.createMultiple(historyEntries);
+        }
+
         const result = await this.getById(id);
 
         if (!result) {
@@ -95,11 +145,20 @@ export class IssueService {
         return result;
     }
 
-    async delete(id: number): Promise<void> {
+    async delete(id: number, userId: number = 1): Promise<void> {
         const issue = await this.getById(id);
         if (!issue) {
             throw new Error(`Issue with id ${id} not found`);
         }
+
+        // Track deletion in history
+        await this.historyService.create({
+            issue_id: id,
+            user_id: userId,
+            field_name: 'issue',
+            old_value: issue.issue_key,
+            change_type: 'deleted',
+        });
 
         await this.db.delete('issues', id);
     }

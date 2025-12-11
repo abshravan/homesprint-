@@ -5,6 +5,7 @@ export interface Comment {
     content: string;
     created_at: string;
     updated_at: string;
+    is_edited: boolean;
 
     // Parody fields
     is_passive_aggressive?: boolean;
