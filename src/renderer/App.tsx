@@ -26,6 +26,7 @@ import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { TaskHistoryPage } from './pages/TaskHistoryPage';
 import { SprintArchivePage } from './pages/SprintArchivePage';
+import { SettingsPage } from './pages/SettingsPage';
 import { useDashboardStats } from './hooks/useDashboard';
 import { getUserService } from '../services/user.service';
 import { Loader2 } from 'lucide-react';
@@ -179,7 +180,7 @@ function App() {
 
                                     {/* System */}
                                     <Route path="/settings/users" element={<UserManagementPage />} />
-                                    <Route path="/settings/config" element={<PlaceholderPage />} />
+                                    <Route path="/settings/config" element={<SettingsPage />} />
                                     <Route path="/settings/excuses" element={<PlaceholderPage />} />
 
                                     {/* Boards (Core) */}
