@@ -45,7 +45,9 @@ export const SetupPage = () => {
             newErrors.password = 'Password must be at least 6 characters';
         }
 
-        if (formData.password !== formData.confirmPassword) {
+        if (!formData.confirmPassword) {
+            newErrors.confirmPassword = 'Please confirm your password';
+        } else if (formData.password !== formData.confirmPassword) {
             newErrors.confirmPassword = 'Passwords do not match';
         }
 
@@ -72,9 +74,20 @@ export const SetupPage = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleNext = () => {
-        if (currentStep === 1 && validateStep1()) {
-            setCurrentStep(2);
+    const handleNext = (e?: React.MouseEvent) => {
+        e?.preventDefault();
+        console.log('handleNext called, current step:', currentStep);
+        console.log('Form data:', formData);
+
+        if (currentStep === 1) {
+            const isValid = validateStep1();
+            console.log('Validation result:', isValid);
+            if (isValid) {
+                console.log('Moving to step 2');
+                setCurrentStep(2);
+            } else {
+                console.log('Validation errors:', errors);
+            }
         }
     };
 
@@ -206,7 +219,15 @@ export const SetupPage = () => {
                                 </div>
                             </div>
 
-                            <form className="space-y-5">
+                            <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); handleNext(); }}>
+                                {Object.keys(errors).length > 0 && (
+                                    <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg">
+                                        <p className="text-sm text-destructive font-medium">
+                                            Please fix the errors below to continue
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="grid md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
                                         <label className="text-sm font-semibold flex items-center gap-1">
