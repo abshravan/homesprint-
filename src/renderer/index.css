@@ -4,82 +4,75 @@
 
 @layer base {
   :root {
-    /* Warm Cream Background */
+    /* Dark Theme with Teal Accent - Default */
+    --background: 220 18% 10%;
+    --foreground: 180 10% 95%;
+
+    --card: 220 18% 13%;
+    --card-foreground: 180 10% 95%;
+
+    --popover: 220 18% 13%;
+    --popover-foreground: 180 10% 95%;
+
+    /* Teal Primary */
+    --primary: 174 72% 56%;
+    --primary-foreground: 220 18% 10%;
+
+    /* Cyan Secondary */
+    --secondary: 187 85% 43%;
+    --secondary-foreground: 220 18% 10%;
+
+    /* Dark Muted with slight teal tint */
+    --muted: 220 18% 18%;
+    --muted-foreground: 180 8% 65%;
+
+    /* Teal Accent */
+    --accent: 174 60% 25%;
+    --accent-foreground: 180 10% 95%;
+
+    /* Red Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 180 10% 95%;
+
+    /* Dark borders */
+    --border: 220 18% 22%;
+    --input: 220 18% 22%;
+    --ring: 174 72% 56%;
+
+    --radius: 0.5rem;
+  }
+
+  .light {
+    /* Light mode - warm cream (original theme) */
     --background: 40 33% 98%;
-    /* Dark Warm Brown Text */
     --foreground: 20 14% 15%;
 
-    /* White/Cream Card */
     --card: 0 0% 100%;
     --card-foreground: 20 14% 15%;
 
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 15%;
 
-    /* Warm Rust/Terracotta Primary */
     --primary: 12 76% 61%;
     --primary-foreground: 40 33% 98%;
 
-    /* Sage Green Secondary */
     --secondary: 120 20% 90%;
     --secondary-foreground: 120 30% 25%;
 
-    /* Beige/Sand Muted */
     --muted: 30 20% 94%;
     --muted-foreground: 25 10% 45%;
 
-    /* Sage Accent */
     --accent: 120 20% 90%;
     --accent-foreground: 120 30% 25%;
 
-    /* Soft Red Destructive */
     --destructive: 0 70% 60%;
     --destructive-foreground: 40 33% 98%;
 
-    /* Warm Grey Border */
     --border: 30 10% 85%;
     --input: 30 10% 85%;
     --ring: 12 76% 61%;
 
     --radius: 0.75rem;
-    /* Rounder corners for friendlier feel */
-  }
-
-  .dark {
-    /* Dark Warm Grey/Brown Background */
-    --background: 25 15% 12%;
-    /* Soft Cream Text */
-    --foreground: 40 20% 94%;
-
-    /* Darker Warm Grey Card */
-    --card: 25 15% 15%;
-    --card-foreground: 40 20% 94%;
-
-    --popover: 25 15% 15%;
-    --popover-foreground: 40 20% 94%;
-
-    /* Muted Rust Primary */
-    --primary: 12 60% 65%;
-    --primary-foreground: 40 20% 94%;
-
-    /* Dark Sage Secondary */
-    --secondary: 120 15% 25%;
-    --secondary-foreground: 40 20% 94%;
-
-    /* Dark Muted */
-    --muted: 25 15% 20%;
-    --muted-foreground: 30 10% 65%;
-
-    /* Dark Accent */
-    --accent: 120 15% 25%;
-    --accent-foreground: 40 20% 94%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 40 20% 94%;
-
-    --border: 25 15% 25%;
-    --input: 25 15% 25%;
-    --ring: 12 60% 65%;
   }
 }
 
@@ -90,5 +83,42 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  /* Custom scrollbar for dark theme */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--accent));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary));
+  }
+}
+
+/* Teal gradient utilities */
+@layer utilities {
+  .bg-gradient-teal {
+    background: linear-gradient(135deg, hsl(174 72% 56%) 0%, hsl(187 85% 43%) 100%);
+  }
+
+  .bg-gradient-teal-dark {
+    background: linear-gradient(135deg, hsl(174 60% 35%) 0%, hsl(187 70% 28%) 100%);
+  }
+
+  .text-gradient-teal {
+    background: linear-gradient(135deg, hsl(174 72% 56%) 0%, hsl(187 85% 43%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
