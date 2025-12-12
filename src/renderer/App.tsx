@@ -24,6 +24,8 @@ import { ProjectListPage } from './pages/ProjectListPage';
 import { CreateProjectPage } from './pages/CreateProjectPage';
 import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { TaskHistoryPage } from './pages/TaskHistoryPage';
+import { SprintArchivePage } from './pages/SprintArchivePage';
 import { useDashboardStats } from './hooks/useDashboard';
 import { getUserService } from '../services/user.service';
 import { Loader2 } from 'lucide-react';
@@ -171,6 +173,8 @@ function App() {
                                     {/* Operations */}
                                     <Route path="/sprints" element={<BoardListPage />} />
                                     <Route path="/backlog" element={<BoardListPage />} />
+                                    <Route path="/operations/history" element={<TaskHistoryPage />} />
+                                    <Route path="/operations/archive" element={<SprintArchivePage />} />
                                     <Route path="/releases" element={<PlaceholderPage />} />
 
                                     {/* System */}
