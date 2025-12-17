@@ -26,6 +26,8 @@ import { ArchivedProjectsPage } from './pages/ArchivedProjectsPage';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { TaskHistoryPage } from './pages/TaskHistoryPage';
 import { SprintArchivePage } from './pages/SprintArchivePage';
+import { SettingsPage } from './pages/SettingsPage';
+import { AchievementsPage } from './pages/AchievementsPage';
 import { useDashboardStats } from './hooks/useDashboard';
 import { getUserService } from '../services/user.service';
 import { Loader2 } from 'lucide-react';
@@ -156,6 +158,7 @@ function App() {
                                     <Route path="/" element={<Dashboard />} />
                                     <Route path="/dashboard/exec" element={<ExecutiveDashboard />} />
                                     <Route path="/dashboard/shame" element={<WallOfShameDashboard />} />
+                                    <Route path="/achievements" element={<AchievementsPage />} />
 
                                     {/* Projects */}
                                     <Route path="/projects" element={<ProjectListPage />} />
@@ -179,7 +182,7 @@ function App() {
 
                                     {/* System */}
                                     <Route path="/settings/users" element={<UserManagementPage />} />
-                                    <Route path="/settings/config" element={<PlaceholderPage />} />
+                                    <Route path="/settings/config" element={<SettingsPage />} />
                                     <Route path="/settings/excuses" element={<PlaceholderPage />} />
 
                                     {/* Boards (Core) */}

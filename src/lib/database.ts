@@ -2,7 +2,7 @@
 // This replaces the SQLite database used in the Electron version
 
 const DB_NAME = 'homesprint';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 interface DBSchema {
     users: { id?: number; username: string; display_name: string; email?: string; avatar_url?: string; role: 'admin' | 'member' | 'guest'; created_at: string; updated_at: string };
@@ -13,6 +13,9 @@ interface DBSchema {
     boards: { id?: number; project_id: number; name: string; type: 'scrum' | 'kanban'; columns?: string; filter_query?: string; created_at: string };
     comments: { id?: number; issue_id: number; author_id: number; content: string; parent_comment_id?: number; created_at: string; updated_at: string; is_edited: boolean; is_passive_aggressive?: boolean };
     issue_history: { id?: number; issue_id: number; user_id: number; field_name: string; old_value?: string; new_value?: string; change_type: 'created' | 'updated' | 'deleted'; created_at: string };
+    user_stats: { id?: number; user_id: number; total_points: number; current_streak: number; longest_streak: number; tasks_completed: number; tasks_abandoned: number; last_completion_date?: string; level: number; updated_at: string };
+    user_achievements: { id?: number; user_id: number; achievement_id: string; earned_at: string; progress?: number };
+    excuses: { id?: number; category: string; text: string; severity: 'minor' | 'moderate' | 'critical'; usage_count: number; rating: number; created_at: string };
 }
 
 type StoreName = keyof DBSchema;
@@ -87,6 +90,24 @@ class Database {
                     historyStore.createIndex('created_at', 'created_at');
                 }
 
+                // Gamification tables
+                if (!db.objectStoreNames.contains('user_stats')) {
+                    const userStatsStore = db.createObjectStore('user_stats', { keyPath: 'id', autoIncrement: true });
+                    userStatsStore.createIndex('user_id', 'user_id', { unique: true });
+                }
+
+                if (!db.objectStoreNames.contains('user_achievements')) {
+                    const achievementsStore = db.createObjectStore('user_achievements', { keyPath: 'id', autoIncrement: true });
+                    achievementsStore.createIndex('user_id', 'user_id');
+                    achievementsStore.createIndex('achievement_id', 'achievement_id');
+                }
+
+                if (!db.objectStoreNames.contains('excuses')) {
+                    const excusesStore = db.createObjectStore('excuses', { keyPath: 'id', autoIncrement: true });
+                    excusesStore.createIndex('category', 'category');
+                    excusesStore.createIndex('rating', 'rating');
+                }
+
                 // Seed initial data
                 const transaction = (event.target as IDBOpenDBRequest).transaction!;
 
@@ -123,6 +144,29 @@ class Database {
                     created_at: new Date().toISOString(),
                     updated_at: new Date().toISOString(),
                 });
+
+                // Seed excuse templates
+                if (db.objectStoreNames.contains('excuses')) {
+                    const excusesStore = transaction.objectStore('excuses');
+                    const excuses = [
+                        { category: 'Technical', text: 'The WiFi was acting up and I couldn\'t access the task list', severity: 'minor' as const, usage_count: 0, rating: 3.5, created_at: new Date().toISOString() },
+                        { category: 'Health', text: 'I had a migraine from overthinking the task complexity', severity: 'moderate' as const, usage_count: 0, rating: 4.0, created_at: new Date().toISOString() },
+                        { category: 'Time', text: 'I was waiting for the optimal planetary alignment to maximize productivity', severity: 'critical' as const, usage_count: 0, rating: 4.8, created_at: new Date().toISOString() },
+                        { category: 'Research', text: 'Still researching the best method - found 47 YouTube tutorials to watch first', severity: 'moderate' as const, usage_count: 0, rating: 4.5, created_at: new Date().toISOString() },
+                        { category: 'Energy', text: 'Mercury was in retrograde affecting my motivation levels', severity: 'critical' as const, usage_count: 0, rating: 5.0, created_at: new Date().toISOString() },
+                        { category: 'Planning', text: 'Needed to create a detailed spreadsheet to plan the task first', severity: 'minor' as const, usage_count: 0, rating: 3.8, created_at: new Date().toISOString() },
+                        { category: 'Weather', text: 'Too sunny outside, didn\'t want to waste the nice weather indoors', severity: 'minor' as const, usage_count: 0, rating: 3.2, created_at: new Date().toISOString() },
+                        { category: 'Weather', text: 'Too rainy outside, the gloomy weather affected my mood', severity: 'minor' as const, usage_count: 0, rating: 3.0, created_at: new Date().toISOString() },
+                        { category: 'Netflix', text: 'Had to finish the series to understand the full character arc for... reasons', severity: 'critical' as const, usage_count: 0, rating: 4.9, created_at: new Date().toISOString() },
+                        { category: 'Social', text: 'Someone was wrong on the internet and I had to correct them', severity: 'moderate' as const, usage_count: 0, rating: 4.3, created_at: new Date().toISOString() },
+                        { category: 'Preparation', text: 'Couldn\'t find the right motivational playlist on Spotify', severity: 'moderate' as const, usage_count: 0, rating: 4.1, created_at: new Date().toISOString() },
+                        { category: 'Equipment', text: 'Waiting for the perfect ergonomic chair to arrive before starting', severity: 'minor' as const, usage_count: 0, rating: 3.6, created_at: new Date().toISOString() },
+                        { category: 'Philosophical', text: 'Questioning the existential meaning of household chores in the grand scheme of the universe', severity: 'critical' as const, usage_count: 0, rating: 4.7, created_at: new Date().toISOString() },
+                        { category: 'Technical', text: 'The task management app was down... wait, that\'s this app', severity: 'minor' as const, usage_count: 0, rating: 3.3, created_at: new Date().toISOString() },
+                        { category: 'Family', text: 'Spouse looked at me funny, interpreted as disapproval of my approach', severity: 'moderate' as const, usage_count: 0, rating: 4.2, created_at: new Date().toISOString() },
+                    ];
+                    excuses.forEach(excuse => excusesStore.add(excuse));
+                }
             };
         });
 
