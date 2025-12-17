@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
             { title: 'My Dashboard', href: '/' },
             { title: 'Executive Overview (Fake)', href: '/dashboard/exec' },
             { title: 'Wall of Shame', href: '/dashboard/shame' },
+            { title: 'Achievements', href: '/achievements', badge: 'New' },
         ]
     },
     {

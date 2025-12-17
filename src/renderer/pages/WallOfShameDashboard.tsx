@@ -1,9 +1,13 @@
 import { useIssues } from '../hooks/useIssues';
-import { Loader2, Flame, Calendar, Trophy, Skull } from 'lucide-react';
+import { useProcrastinationLeaderboard } from '../hooks/useGamification';
+import { useUsers } from '../hooks/useUsers';
+import { Loader2, Flame, Calendar, Trophy, Skull, Medal } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 export const WallOfShameDashboard = () => {
     const { data: issues, isLoading } = useIssues();
+    const { data: leaderboard, isLoading: isLoadingLeaderboard } = useProcrastinationLeaderboard(5);
+    const { data: users } = useUsers();
 
     if (isLoading) {
         return (
@@ -204,6 +208,69 @@ export const WallOfShameDashboard = () => {
                         Congratulations! You either have no overdue tasks, or you haven't created any tasks yet.
                         Either way, you're winning at household management... or avoiding it entirely.
                     </p>
+                </div>
+            )}
+
+            {/* Procrastination Leaderboard */}
+            {leaderboard && leaderboard.length > 0 && (
+                <div className="bg-card rounded-lg border border-amber-200 p-6">
+                    <h2 className="text-xl font-semibold mb-4 flex items-center">
+                        <Medal className="mr-2 h-5 w-5 text-amber-600" />
+                        Procrastination Hall of Fame
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-4">
+                        The champions of task avoidance. Wear your badge with dishonor!
+                    </p>
+                    <div className="space-y-3">
+                        {leaderboard.map((stats, index) => {
+                            const user = users?.find(u => u.id === stats.user_id);
+                            const medalColors = ['text-amber-500', 'text-gray-400', 'text-amber-700', 'text-orange-600', 'text-orange-500'];
+                            const medalIcons = ['🥇', '🥈', '🥉', '🏅', '🏅'];
+
+                            return (
+                                <div
+                                    key={stats.id}
+                                    className={`flex items-center justify-between p-4 rounded-lg border ${
+                                        index === 0 ? 'bg-amber-50 border-amber-300 dark:bg-amber-950/20' :
+                                        index === 1 ? 'bg-gray-50 border-gray-300 dark:bg-gray-900/20' :
+                                        index === 2 ? 'bg-orange-50 border-orange-300 dark:bg-orange-950/20' :
+                                        'bg-muted/50 border-border'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-4">
+                                        <span className="text-3xl">{medalIcons[index]}</span>
+                                        <div>
+                                            <div className="font-semibold flex items-center gap-2">
+                                                {user?.display_name || 'Unknown User'}
+                                                <span className="text-xs text-muted-foreground">@{user?.username}</span>
+                                            </div>
+                                            <div className="text-sm text-muted-foreground">
+                                                Abandoned {stats.tasks_abandoned} tasks with grace
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <div className={`text-2xl font-bold ${medalColors[index]}`}>
+                                            {stats.tasks_abandoned}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            abandonments
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    {isLoadingLeaderboard && (
+                        <div className="flex items-center justify-center p-8">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                        </div>
+                    )}
+                    {leaderboard.length === 0 && !isLoadingLeaderboard && (
+                        <div className="text-center p-8 text-muted-foreground">
+                            No procrastination data yet. Start abandoning some tasks to compete!
+                        </div>
+                    )}
                 </div>
             )}
 
